@@ -24,4 +24,8 @@ public class Roads extends Sprite {
         this.y += vY;
     }
     
+    public void collided(float c) {
+    	y -= vY+c;
+    }
+    
 }

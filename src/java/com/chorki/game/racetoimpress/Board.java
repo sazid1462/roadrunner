@@ -7,19 +7,26 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 
 import javax.swing.JPanel;
-
 
 public class Board extends JPanel implements Runnable, Commons { 
 	
 	private static final long serialVersionUID = 1L;
 	private LinkedList<Traffics> traffics;
 	private LinkedList<Roads> roads;
+	
+	public LinkedList<Sprite> sprites = new LinkedList<Sprite>();
+	
 	private Player player;
 	private int numTraffics = 5;
 	private int delayNewTraffic = 10000; // 30 sec
@@ -30,17 +37,20 @@ public class Board extends JPanel implements Runnable, Commons {
 	protected boolean pressedAccelarator = false;
 	
 	private long beforeTimeForTraffic;
+	private long timeBeforeHit, timeDiffHit;
 	
 	private float vY = 0;
 	
 	private int hit = 0;
 
-	private boolean ingame = true;
+	public boolean ingame = true, playerCollision = false, playerRenewed = true;
+	public boolean flashFlag = true;
+	
 	//    private final String expl = "../spacepix/explosion.png";
 	//    private final String alienpix = "../spacepix/alien.png";
 	private String message = "Game Over";
 
-	private Thread animator;
+	public Thread animator;
 
 	public Board() 
 	{
@@ -76,6 +86,10 @@ public class Board extends JPanel implements Runnable, Commons {
             animator = new Thread(this);
             animator.start();
         }
+//		if (collisionHandler == null || !ingame) {
+//			collisionHandler = new Thread(new CollisionDetector(this));
+//			collisionHandler.start();
+//        }
 	}
 
 	public void drawTraffic(Graphics g) 
@@ -88,6 +102,7 @@ public class Board extends JPanel implements Runnable, Commons {
 			Traffics traffic = traffics.poll();
 			if (traffic.isInside()) {
 				traffic.act(vY);
+				sprites.add(traffic);
 				g.drawImage(traffic.getImage(), (int)traffic.getX(), (int)traffic.getY(),  this);
 				traffics.add(traffic);
 			}
@@ -95,22 +110,11 @@ public class Board extends JPanel implements Runnable, Commons {
 		}
 		
 		if (timeDiffForTraffic > Math.min(5000, delayNewTraffic/vY)) {
-			traffics.add(new Traffics(false));
+			Traffics traffic = new Traffics(timeDiffForTraffic%2 == 1); 
+			traffics.add(traffic);
+			sprites.add(traffic);
 			beforeTimeForTraffic = System.currentTimeMillis();
 		}
-		
-		if (timeDiffForTraffic > Math.min(5000, delayNewTraffic/vY)) {
-			traffics.add(new Traffics(true));
-			beforeTimeForTraffic = System.currentTimeMillis();
-		}
-		
-//		int rem = traffics.size(); 
-//		while (rem > 0) {
-//			Traffics traffic = traffics.poll();
-//			g.drawImage(traffic.getImage(), (int)traffic.getX(), (int)traffic.getY(), this);
-//			traffics.add(traffic);
-//			rem--;
-//		}
 	}
 
 	public void drawRoads(Graphics g) 
@@ -158,11 +162,6 @@ public class Board extends JPanel implements Runnable, Commons {
 	}
 
 	public void drawPlayer(Graphics g) {
-		
-		if (hit == 2) {
-			ingame = false;
-		}
-
 		// player
 		if (pressedLeft) {
 			player.setVx(player.getVx()-vY*.1f);
@@ -178,13 +177,72 @@ public class Board extends JPanel implements Runnable, Commons {
 		}
 		player.act();
 		
-		g.drawImage(player.getImage(), (int)player.getX(), (int)player.getY(), this);
-
-		if (player.isDying()) {
-			ingame = false;
+		sprites.add(player);
+		
+		if (playerRenewed) {
+			timeDiffHit = System.currentTimeMillis() - timeBeforeHit;
+			if (timeDiffHit > DELAY_HIT) {
+				playerRenewed = false;
+			}
+			if (flashFlag) {
+				g.drawImage(player.getImage(), (int)player.getX(), (int)player.getY(), this);
+				flashFlag = false;
+			} else {
+				flashFlag = true;
+			}
+		} else {
+			g.drawImage(player.getImage(), (int)player.getX(), (int)player.getY(), this);
 		}
 	}
 
+	public void handleCollision() {
+		while(!sprites.isEmpty()) {
+			
+			Sprite sp1 = sprites.poll();
+			
+			for (Iterator<Sprite> it = sprites.iterator(); it.hasNext();) {
+				Sprite sp2 = it.next();
+				Rectangle r1 = sp1.getBounds();
+				Rectangle r2 = sp2.getBounds();
+				Rectangle rs1 = sp1.getSafeBounds();
+				Rectangle rs2 = sp2.getBounds();
+				
+				if (sp1.isPlayer) {
+					if (!playerRenewed) {
+						if (r1.intersects(r2)) {
+							roads.get(0).collided(sp2.getVy());
+							vY -= sp2.getVy()+vY;
+							sp2.collided(2*vY);
+							playerHit();
+							renewPlayerCar();
+							timeBeforeHit = System.currentTimeMillis();
+						}
+					}
+				} else if (sp2.isPlayer) {
+					if (!playerRenewed) {
+						if (r1.intersects(r2)) {
+							sp1.collided(2*vY);
+							roads.get(0).collided(sp1.getVy());
+							vY -= sp2.getVy()+vY;
+							playerHit();
+							renewPlayerCar();
+							timeBeforeHit = System.currentTimeMillis();
+						}
+					}
+				} else {
+					if (r1.intersects(r2)) {
+		                sp1.collided(sp2.getVy());
+		                sp2.collided(sp1.getVy());
+					}
+					if (rs1.intersects(rs2)) {
+		                sp1.slowDown(Math.min(sp2.getVy(), sp1.getVy()));
+		                sp2.slowDown(Math.min(sp2.getVy(), sp1.getVy()));
+					}
+	            }
+			}
+		}
+	}
+	
 	public void paint(Graphics g)
 	{
 		super.paint(g);
@@ -193,6 +251,8 @@ public class Board extends JPanel implements Runnable, Commons {
 			drawRoads(g);
 			drawTraffic(g);
 			drawPlayer(g);
+			
+			handleCollision();
 		}
 
 		Toolkit.getDefaultToolkit().sync();
@@ -220,29 +280,21 @@ public class Board extends JPanel implements Runnable, Commons {
 				BOARD_WIDTH/2);
 	}
 
-	public void animationCycle()  {
-		// roads
-//		int rem = roads.size(); 
-//		while (rem > 0) {
-//			Roads road = roads.poll();
-//			if (road.isInside()) {
-//				road.act();
-//			}
-//			roads.add(road);
-//			rem--;
-//		}
-//		
-		// traffics
-//		int rem = traffics.size(); 
-//		while (rem > 0) {
-//			Traffics traffic = traffics.poll();
-//			if (traffic.isInside()) {
-////				traffic.setVy(traffic.getVy()+vY/10);
-//				traffic.act(vY);
-//			}
-//			traffics.add(traffic);
-//			rem--;
-//		}
+	public void playerHit() {
+		hit++;
+		playerCollision = true;
+		pressedAccelarator = false;
+		pressedBrake = false;
+		pressedLeft = false;
+		pressedRight = false;
+		if (hit >= 3) ingame = false;
+	}
+	
+	public void renewPlayerCar() {
+		player = new Player();
+		flashFlag = true;
+		playerRenewed = true;
+		playerCollision = false;
 	}
 
 	@Override
@@ -250,7 +302,8 @@ public class Board extends JPanel implements Runnable, Commons {
 		long beforeTime, timeDiff, sleep;
 
 		beforeTime = System.currentTimeMillis();
-		beforeTimeForTraffic = System.currentTimeMillis();
+		beforeTimeForTraffic = beforeTime;
+		timeBeforeHit = beforeTime;
 		
 		while (ingame) {
 			repaint();
@@ -285,6 +338,8 @@ public class Board extends JPanel implements Runnable, Commons {
 	private class GameKeyListener implements KeyListener {
 
 		public void keyReleased(KeyEvent e) {
+			if (playerCollision) return;
+			
 			if (e.getKeyCode()==KeyEvent.VK_LEFT) {
 				pressedLeft = false;
 			}
@@ -300,6 +355,8 @@ public class Board extends JPanel implements Runnable, Commons {
 		}
 
 		public void keyPressed(KeyEvent e) {
+			if (playerCollision) return;
+			
 			if (e.getKeyCode()==KeyEvent.VK_LEFT) {
 				pressedLeft = true;
 //				pressedRight = false;

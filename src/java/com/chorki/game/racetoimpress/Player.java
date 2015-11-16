@@ -16,6 +16,7 @@ public class Player extends Sprite implements Commons{
         setImage(Cars.cars[0].getImage());
         setX(START_X);
         setY(START_Y);
+        isPlayer = true;
     }
 
     public void setVx(float vX) {

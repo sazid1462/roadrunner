@@ -32,15 +32,15 @@ public class Traffics extends Sprite {
         if (!rev) ind = (int) (Math.round(Math.random()*100) % (Cars.cars.length-1)+1);
         else ind = (int) (Math.round(Math.random()*100) % Cars.carsRev.length);
         
-//        int width = Cars.cars[ind].getImage().getWidth(null);
-        int height = 0;
         if (!rev) {
         	ind2 = (int) (Math.round(Math.random()*100) % posX.length);
-        	Cars.cars[ind].getImage().getHeight(null);
+        	height = Cars.cars[ind].getImage().getHeight(null);
+        	width = Cars.cars[ind].getImage().getWidth(null);
         	setImage(Cars.cars[ind].getImage());
         } else {
         	ind2 = (int) (Math.round(Math.random()*100) % posXRev.length);
-        	Cars.carsRev[ind].getImage().getHeight(null);
+        	height = Cars.carsRev[ind].getImage().getHeight(null);
+        	width = Cars.carsRev[ind].getImage().getWidth(null);
         	setImage(Cars.carsRev[ind].getImage());
         }
         

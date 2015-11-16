@@ -2,13 +2,13 @@ package com.chorki.game.racetoimpress;
 
 import java.awt.Image;
 import java.awt.Rectangle;
+import java.time.zone.ZoneOffsetTransitionRule.TimeDefinition;
 
 import com.chorki.game.utils.Pair;
 
 public class Sprite implements Commons{
 
-        private boolean visible;
-        private Image image;
+        protected Image image[] = new Image[3];
         protected float x;
         protected float y;
         protected int width;
@@ -17,11 +17,9 @@ public class Sprite implements Commons{
         protected float vY;
         protected boolean dying;
         public boolean isPlayer = false;
+        protected int imgInd = 0, imgCount = 0;
+//        private long timeBef;
 
-        public Sprite() {
-            visible = true;
-        }
-        
         public void collided(float c) {
         	y -= vY+c;
         	vY = 0;
@@ -36,7 +34,7 @@ public class Sprite implements Commons{
         }
         
         public Rectangle getSafeBounds() {
-            return new Rectangle((int)x-10, (int)y-10, width+10, height+10);
+            return new Rectangle((int)x-20, (int)y-20, width+20, height+20);
         }
         
         public boolean isInside() {
@@ -44,21 +42,14 @@ public class Sprite implements Commons{
 //            if (y < BORDER_TOP-500) return false;
             return true;
         }
-        
-        public boolean isVisible() {
-            return visible;
-        }
-
-        protected void setVisible(boolean visible) {
-            this.visible = visible;
-        }
 
         public void setImage(Image image) {
-            this.image = image;
+            this.image[imgCount] = image;
+            imgCount++;
         }
 
         public Image getImage() {
-            return image;
+            return image[((imgInd++)/5)%imgCount];
         }
 
         public void setX(float x) {

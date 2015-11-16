@@ -19,11 +19,14 @@ import java.util.LinkedList;
 
 import javax.swing.JPanel;
 
+import com.chorki.game.utils.Explosion;
+
 public class Board extends JPanel implements Runnable, Commons { 
 	
 	private static final long serialVersionUID = 1L;
 	private LinkedList<Traffics> traffics;
 	private LinkedList<Roads> roads;
+	private LinkedList<Explosion> explosion;
 	
 	public LinkedList<Sprite> sprites = new LinkedList<Sprite>();
 	
@@ -35,6 +38,7 @@ public class Board extends JPanel implements Runnable, Commons {
 	protected boolean pressedRight = false;
 	protected boolean pressedBrake = false;
 	protected boolean pressedAccelarator = false;
+	protected boolean pressedBoost = false;
 	
 	private long beforeTimeForTraffic;
 	private long timeBeforeHit, timeDiffHit;
@@ -70,7 +74,9 @@ public class Board extends JPanel implements Runnable, Commons {
 	public void gameInit() {
 
 		traffics = new LinkedList<Traffics>();
-
+		
+		explosion = new LinkedList<Explosion>();
+		
 		player = new Player();
 
 		roads = new LinkedList<Roads>();
@@ -91,7 +97,18 @@ public class Board extends JPanel implements Runnable, Commons {
 //			collisionHandler.start();
 //        }
 	}
-
+	
+	public void drawExplosion(Graphics g) {
+		int rem = explosion.size(); 
+		while (rem > 0) {
+			Explosion expl = explosion.poll();
+			expl.act(vY);
+			g.drawImage(expl.getImage(), (int)expl.getX(), (int)expl.getY(),  this);
+			if (!expl.isDying()) explosion.add(expl);
+			rem--;
+		}
+	}
+	
 	public void drawTraffic(Graphics g) 
 	{
 		long timeDiffForTraffic;
@@ -104,7 +121,7 @@ public class Board extends JPanel implements Runnable, Commons {
 				traffic.act(vY);
 				sprites.add(traffic);
 				g.drawImage(traffic.getImage(), (int)traffic.getX(), (int)traffic.getY(),  this);
-				traffics.add(traffic);
+				if (!traffic.isDying()) traffics.add(traffic);
 			}
 			rem--;
 		}
@@ -122,23 +139,26 @@ public class Board extends JPanel implements Runnable, Commons {
 		// road
 		int rem = roads.size();
 		
-		if (pressedAccelarator) {
-			vY += .1;
-			if (vY > MAX_VY) {
-				vY = MAX_VY;
-			}
-		} else if (pressedBrake) {
-			vY -= .5;
-			if (vY < 0) {
-				vY = 0;
-			}
+		if (pressedBoost) {
+			vY = MAX_BOOST_VY;
 		} else {
-			vY -= .1;
-			if (vY < 0) {
-				vY = 0;
+			if (pressedAccelarator) {
+				vY += .1;
+				if (vY > MAX_VY) {
+					vY = MAX_VY;
+				}
+			} else if (pressedBrake) {
+				vY -= .5;
+				if (vY < 0) {
+					vY = 0;
+				}
+			} else {
+				vY -= .1;
+				if (vY < 0) {
+					vY = 0;
+				}
 			}
 		}
-		
 		while (rem > 0) {
 			Roads road = roads.poll();
 			
@@ -205,7 +225,7 @@ public class Board extends JPanel implements Runnable, Commons {
 				Rectangle r1 = sp1.getBounds();
 				Rectangle r2 = sp2.getBounds();
 				Rectangle rs1 = sp1.getSafeBounds();
-				Rectangle rs2 = sp2.getBounds();
+				Rectangle rs2 = sp2.getSafeBounds();
 				
 				if (sp1.isPlayer) {
 					if (!playerRenewed) {
@@ -213,10 +233,15 @@ public class Board extends JPanel implements Runnable, Commons {
 							roads.get(0).collided(sp2.getVy());
 							vY -= sp2.getVy()+vY;
 							sp2.collided(2*vY);
+							sp2.setDying(true);
+							explosion.add(new Explosion(sp2.getX(), sp2.getY()));
 							playerHit();
 							renewPlayerCar();
 							timeBeforeHit = System.currentTimeMillis();
 						}
+					}
+					if (rs1.intersects(rs2)) {
+		                sp2.slowDown(Math.min(sp2.getVy(), sp1.getVy()));
 					}
 				} else if (sp2.isPlayer) {
 					if (!playerRenewed) {
@@ -224,15 +249,24 @@ public class Board extends JPanel implements Runnable, Commons {
 							sp1.collided(2*vY);
 							roads.get(0).collided(sp1.getVy());
 							vY -= sp2.getVy()+vY;
+							sp1.setDying(true);
+							explosion.add(new Explosion(sp1.getX(), sp1.getY()));
 							playerHit();
 							renewPlayerCar();
 							timeBeforeHit = System.currentTimeMillis();
 						}
 					}
+					if (rs1.intersects(rs2)) {
+		                sp1.slowDown(Math.min(sp2.getVy(), sp1.getVy()));
+					}
 				} else {
 					if (r1.intersects(r2)) {
 		                sp1.collided(sp2.getVy());
+		                sp1.setDying(true);
+		                explosion.add(new Explosion(sp1.getX(), sp1.getY()));
 		                sp2.collided(sp1.getVy());
+		                sp2.setDying(true);
+		                explosion.add(new Explosion(sp2.getX(), sp2.getY()));
 					}
 					if (rs1.intersects(rs2)) {
 		                sp1.slowDown(Math.min(sp2.getVy(), sp1.getVy()));
@@ -251,6 +285,7 @@ public class Board extends JPanel implements Runnable, Commons {
 			drawRoads(g);
 			drawTraffic(g);
 			drawPlayer(g);
+			drawExplosion(g);
 			
 			handleCollision();
 		}
@@ -352,6 +387,10 @@ public class Board extends JPanel implements Runnable, Commons {
 			if (e.getKeyCode()==KeyEvent.VK_DOWN) {
 				pressedBrake = false;
 			}
+			if (e.getKeyCode()==KeyEvent.VK_SPACE)
+			{
+				pressedBoost = false;
+			}
 		}
 
 		public void keyPressed(KeyEvent e) {
@@ -372,6 +411,10 @@ public class Board extends JPanel implements Runnable, Commons {
 			if (e.getKeyCode()==KeyEvent.VK_DOWN) {
 				pressedAccelarator = false;
 				pressedBrake = true;
+			}
+			if (e.getKeyCode()==KeyEvent.VK_SPACE)
+			{
+				pressedBoost = true;
 			}
 		}
 

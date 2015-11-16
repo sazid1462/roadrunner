@@ -6,17 +6,6 @@ import com.chorki.game.utils.Pair;
 
 public class Traffics extends Sprite {
 
-//    private final Pair trafficVelocity[] = {
-//    		new Pair(.0f, 2.6f),
-//    		new Pair(.0f, 3.5f),
-//    		new Pair(.0f, 3.0f),
-//    		new Pair(.0f, 2.5f),
-//    		new Pair(.0f, 2.7f),
-//    		new Pair(.0f, 4.0f),
-//    		new Pair(.0f, 2.8f),
-//    		new Pair(.0f, 2.4f)
-//    };
-    
     private final int posX[] = {
     		BOARD_MIDDLE+10, BOARD_MIDDLE+15+CAR_WIDTH, BOARD_MIDDLE+30+2*CAR_WIDTH
     };
@@ -29,19 +18,47 @@ public class Traffics extends Sprite {
         
         int ind = 0, ind2 = 0;
         
-        if (!rev) ind = (int) (Math.round(Math.random()*100) % (Cars.cars.length-1)+1);
-        else ind = (int) (Math.round(Math.random()*100) % Cars.carsRev.length);
+        if (!rev) ind = (int) (Math.round(Math.random()*100) % (Cars.cars.length+1)+1);
+        else ind = (int) (Math.round(Math.random()*100) % Cars.carsRev.length+2);
         
         if (!rev) {
         	ind2 = (int) (Math.round(Math.random()*100) % posX.length);
-        	height = Cars.cars[ind].getImage().getHeight(null);
-        	width = Cars.cars[ind].getImage().getWidth(null);
-        	setImage(Cars.cars[ind].getImage());
+        	if (ind==7) {
+        		height = Cars.police[0].getImage().getHeight(null);
+        		width = Cars.police[0].getImage().getWidth(null);
+        		setImage(Cars.police[0].getImage());
+        		setImage(Cars.police[1].getImage());
+        		setImage(Cars.police[2].getImage());
+        	} else if (ind==8) {
+        		height = Cars.ambulance[0].getImage().getHeight(null);
+        		width = Cars.ambulance[0].getImage().getWidth(null);
+        		setImage(Cars.ambulance[0].getImage());
+        		setImage(Cars.ambulance[1].getImage());
+        		setImage(Cars.ambulance[2].getImage());
+        	} else {
+        		height = Cars.cars[ind].getImage().getHeight(null);
+        		width = Cars.cars[ind].getImage().getWidth(null);
+        		setImage(Cars.cars[ind].getImage());
+        	}
         } else {
-        	ind2 = (int) (Math.round(Math.random()*100) % posXRev.length);
-        	height = Cars.carsRev[ind].getImage().getHeight(null);
-        	width = Cars.carsRev[ind].getImage().getWidth(null);
-        	setImage(Cars.carsRev[ind].getImage());
+        	if (ind==6) {
+        		height = Cars.policeRev[0].getImage().getHeight(null);
+        		width = Cars.policeRev[0].getImage().getWidth(null);
+        		setImage(Cars.policeRev[0].getImage());
+        		setImage(Cars.policeRev[1].getImage());
+        		setImage(Cars.policeRev[2].getImage());
+        	} else if (ind==7) {
+        		height = Cars.ambulanceRev[0].getImage().getHeight(null);
+        		width = Cars.ambulanceRev[0].getImage().getWidth(null);
+        		setImage(Cars.ambulanceRev[0].getImage());
+        		setImage(Cars.ambulanceRev[1].getImage());
+        		setImage(Cars.ambulanceRev[2].getImage());
+        	} else {
+	        	ind2 = (int) (Math.round(Math.random()*100) % posXRev.length);
+	        	height = Cars.carsRev[ind].getImage().getHeight(null);
+	        	width = Cars.carsRev[ind].getImage().getWidth(null);
+	        	setImage(Cars.carsRev[ind].getImage());
+        	}
         }
         
 //        ind = (int) Math.round(Math.random()*100) % trafficVelocity.length;

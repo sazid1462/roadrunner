@@ -105,6 +105,9 @@ public class Board extends JPanel implements Runnable, Commons {
 			expl.act(vY);
 			g.drawImage(expl.getImage(), (int)expl.getX(), (int)expl.getY(),  this);
 			if (!expl.isDying()) explosion.add(expl);
+			else {
+				if (playerCollision) renewPlayerCar();
+			}
 			rem--;
 		}
 	}
@@ -143,17 +146,17 @@ public class Board extends JPanel implements Runnable, Commons {
 			vY = MAX_BOOST_VY;
 		} else {
 			if (pressedAccelarator) {
-				vY += .1;
+				vY += .05;
 				if (vY > MAX_VY) {
 					vY = MAX_VY;
 				}
 			} else if (pressedBrake) {
-				vY -= .5;
+				vY -= .1;
 				if (vY < 0) {
 					vY = 0;
 				}
 			} else {
-				vY -= .1;
+				vY -= .05;
 				if (vY < 0) {
 					vY = 0;
 				}
@@ -184,13 +187,13 @@ public class Board extends JPanel implements Runnable, Commons {
 	public void drawPlayer(Graphics g) {
 		// player
 		if (pressedLeft) {
-			player.setVx(player.getVx()-vY*.1f);
+			player.setVx(player.getVx()-vY*.05f);
 		}
 		else if (!pressedRight) {
 			player.setVx(0);
 		}
 		if (pressedRight) {
-			player.setVx(player.getVx()+vY*.1f);
+			player.setVx(player.getVx()+vY*.05f);
 		}
 		else if (!pressedLeft) {
 			player.setVx(0);
@@ -211,7 +214,7 @@ public class Board extends JPanel implements Runnable, Commons {
 				flashFlag = true;
 			}
 		} else {
-			g.drawImage(player.getImage(), (int)player.getX(), (int)player.getY(), this);
+			if (!playerCollision) g.drawImage(player.getImage(), (int)player.getX(), (int)player.getY(), this);
 		}
 	}
 
@@ -233,10 +236,10 @@ public class Board extends JPanel implements Runnable, Commons {
 							roads.get(0).collided(sp2.getVy());
 							vY -= sp2.getVy()+vY;
 							sp2.collided(2*vY);
-							sp2.setDying(true);
 							explosion.add(new Explosion(sp2.getX(), sp2.getY()));
+							explosion.add(new Explosion(sp1.getX(), sp1.getY()));
 							playerHit();
-							renewPlayerCar();
+//							renewPlayerCar();
 							timeBeforeHit = System.currentTimeMillis();
 						}
 					}
@@ -251,8 +254,9 @@ public class Board extends JPanel implements Runnable, Commons {
 							vY -= sp2.getVy()+vY;
 							sp1.setDying(true);
 							explosion.add(new Explosion(sp1.getX(), sp1.getY()));
+							explosion.add(new Explosion(sp2.getX(), sp2.getY()));
 							playerHit();
-							renewPlayerCar();
+//							renewPlayerCar();
 							timeBeforeHit = System.currentTimeMillis();
 						}
 					}
@@ -358,12 +362,12 @@ public class Board extends JPanel implements Runnable, Commons {
 			timeDiff = System.currentTimeMillis() - beforeTime;
             sleep = DELAY - timeDiff;
 
-            if (sleep < 0) 
-                sleep = 2;
-            try {
-                Thread.sleep(sleep);
-            } catch (InterruptedException e) {
-                System.out.println("interrupted");
+            if (sleep > 0) { 
+            	try {
+            		Thread.sleep(sleep);
+            	} catch (InterruptedException e) {
+            		System.out.println("interrupted");
+            	}
             }
             beforeTime = System.currentTimeMillis();
 		}

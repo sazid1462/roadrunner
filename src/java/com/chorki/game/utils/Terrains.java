@@ -4,7 +4,7 @@ import javax.swing.ImageIcon;
 
 public class Terrains {
 	private static final String roadImages[] = { 
-    		"D:\\JavaWorkspace\\RaceToImpress\\roads\\road1.jpg"
+    		"./roads/road1.jpg"
     };
 	
 	public static ImageIcon roads[];

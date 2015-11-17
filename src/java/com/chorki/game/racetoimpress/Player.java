@@ -5,7 +5,7 @@ import com.chorki.game.utils.Cars;
 
 public class Player extends Sprite implements Commons{
 
-    private final int START_Y = 600; 
+    private final int START_Y = 550; 
     private final int START_X = BOARD_MIDDLE/2;
 
     public Player() {

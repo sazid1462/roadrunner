@@ -19,7 +19,9 @@ import java.util.LinkedList;
 
 import javax.swing.JPanel;
 
+import com.chorki.game.utils.Burn;
 import com.chorki.game.utils.Explosion;
+import com.chorki.game.utils.Smoke;
 
 public class Board extends JPanel implements Runnable, Commons { 
 	
@@ -27,12 +29,14 @@ public class Board extends JPanel implements Runnable, Commons {
 	private LinkedList<Traffics> traffics;
 	private LinkedList<Roads> roads;
 	private LinkedList<Explosion> explosion;
+	private LinkedList<Smoke> smoke;
+	private LinkedList<Burn> burn;
 	
 	public LinkedList<Sprite> sprites = new LinkedList<Sprite>();
 	
 	private Player player;
 	private int numTraffics = 5;
-	private int delayNewTraffic = 10000; // 30 sec
+	private int delayNewTraffic = 8000; // 30 sec
 
 	protected boolean pressedLeft = false;
 	protected boolean pressedRight = false;
@@ -44,6 +48,7 @@ public class Board extends JPanel implements Runnable, Commons {
 	private long timeBeforeHit, timeDiffHit;
 	
 	private float vY = 0;
+	private int boostVal = 0;
 	
 	private int hit = 0;
 
@@ -55,6 +60,9 @@ public class Board extends JPanel implements Runnable, Commons {
 	private String message = "Game Over";
 
 	public Thread animator;
+	private long score = 0;
+	private long timeDiffScore = 0;
+	private long timeBeforeScore = 0;
 
 	public Board() 
 	{
@@ -76,9 +84,13 @@ public class Board extends JPanel implements Runnable, Commons {
 		traffics = new LinkedList<Traffics>();
 		
 		explosion = new LinkedList<Explosion>();
+		smoke = new LinkedList<Smoke>();
+		burn = new LinkedList<Burn>();
 		
 		player = new Player();
-
+		smoke.add(new Smoke(player.x, player.y+player.height/2));
+		burn.add(new Burn(player.x, player.y+player.height/2));
+		
 		roads = new LinkedList<Roads>();
 		roads.add(new Roads(0, 0));
 		roads.add(new Roads(0, -1280));
@@ -98,6 +110,27 @@ public class Board extends JPanel implements Runnable, Commons {
 //        }
 	}
 	
+	public void drawUI(Graphics g) {
+//		g.setColor(new Color(0, 32, 48));
+//		g.fillRect(50, BOARD_WIDTH/2 - 30, BOARD_WIDTH-100, 50);
+//		g.setColor(Color.white);
+//		g.drawRect(50, BOARD_WIDTH/2 - 30, BOARD_WIDTH-100, 50);
+
+		Font small = new Font("Helvetica", Font.BOLD, 14);
+		FontMetrics metr = this.getFontMetrics(small);
+
+		g.setColor(Color.white);
+		g.setFont(small);
+		g.drawString("Score: "+score , 40, 40);
+		g.drawString("Speed: "+(int)vY*10+" kmh" , 40, 60);
+		g.drawString("Nitro: ", 40, 80);
+		g.setColor(Color.gray);
+		g.fillRect(80, 65, 100, metr.getHeight());
+		if (boostVal >= 500) g.setColor(Color.green);
+		else g.setColor(Color.red);
+		g.fillRect(80, 65, boostVal/10, metr.getHeight());
+	}
+	
 	public void drawExplosion(Graphics g) {
 		int rem = explosion.size(); 
 		while (rem > 0) {
@@ -108,6 +141,28 @@ public class Board extends JPanel implements Runnable, Commons {
 			else {
 				if (playerCollision) renewPlayerCar();
 			}
+			rem--;
+		}
+	}
+	
+	public void drawSmoke(Graphics g) {
+		if (playerCollision) return;
+		int rem = smoke.size(); 
+		while (rem > 0) {
+			Smoke smk = smoke.poll();
+			if (pressedAccelarator && !pressedBoost) g.drawImage(smk.getImage(), (int)player.getX()-10, (int)player.getY()+70,  this);
+			smoke.add(smk);
+			rem--;
+		}
+	}
+	
+	public void drawBurn(Graphics g) {
+		if (playerCollision) return;
+		int rem = burn.size(); 
+		while (rem > 0) {
+			Burn brn = burn.poll();
+			if (pressedBoost || (pressedBoost && !pressedAccelarator)) g.drawImage(brn.getImage(), (int)player.getX()-10, (int)player.getY()+70,  this);
+			burn.add(brn);
 			rem--;
 		}
 	}
@@ -143,7 +198,15 @@ public class Board extends JPanel implements Runnable, Commons {
 		int rem = roads.size();
 		
 		if (pressedBoost) {
-			vY = MAX_BOOST_VY;
+			vY += .1;
+			if (vY > MAX_BOOST_VY) {
+				vY = MAX_BOOST_VY;
+			}
+			boostVal -= 5;
+			if (boostVal <= 0) {
+				pressedBoost = false;
+				boostVal = 0;
+			}
 		} else {
 			if (pressedAccelarator) {
 				vY += .05;
@@ -200,6 +263,14 @@ public class Board extends JPanel implements Runnable, Commons {
 		}
 		player.act();
 		
+		timeDiffScore = System.currentTimeMillis() - timeBeforeScore;
+		if (vY>=10 && timeDiffScore>1000) {
+			score += vY;
+			timeBeforeScore = System.currentTimeMillis();
+		}
+		
+		if (boostVal<1000 && pressedAccelarator) boostVal ++;
+		
 		sprites.add(player);
 		
 		if (playerRenewed) {
@@ -217,6 +288,7 @@ public class Board extends JPanel implements Runnable, Commons {
 			if (!playerCollision) g.drawImage(player.getImage(), (int)player.getX(), (int)player.getY(), this);
 		}
 	}
+	
 
 	public void handleCollision() {
 		while(!sprites.isEmpty()) {
@@ -231,10 +303,10 @@ public class Board extends JPanel implements Runnable, Commons {
 				Rectangle rs2 = sp2.getSafeBounds();
 				
 				if (sp1.isPlayer) {
-					if (!playerRenewed) {
+					if (!playerRenewed && !playerCollision) {
 						if (r1.intersects(r2)) {
 							roads.get(0).collided(sp2.getVy());
-							vY -= sp2.getVy()+vY;
+							vY = 0;
 							sp2.collided(2*vY);
 							explosion.add(new Explosion(sp2.getX(), sp2.getY()));
 							explosion.add(new Explosion(sp1.getX(), sp1.getY()));
@@ -247,11 +319,11 @@ public class Board extends JPanel implements Runnable, Commons {
 		                sp2.slowDown(Math.min(sp2.getVy(), sp1.getVy()));
 					}
 				} else if (sp2.isPlayer) {
-					if (!playerRenewed) {
+					if (!playerRenewed && !playerCollision) {
 						if (r1.intersects(r2)) {
 							sp1.collided(2*vY);
 							roads.get(0).collided(sp1.getVy());
-							vY -= sp2.getVy()+vY;
+							vY = 0;
 							sp1.setDying(true);
 							explosion.add(new Explosion(sp1.getX(), sp1.getY()));
 							explosion.add(new Explosion(sp2.getX(), sp2.getY()));
@@ -288,8 +360,11 @@ public class Board extends JPanel implements Runnable, Commons {
 		if (ingame) {
 			drawRoads(g);
 			drawTraffic(g);
+			drawSmoke(g);
+			drawBurn(g);
 			drawPlayer(g);
 			drawExplosion(g);
+			drawUI(g);
 			
 			handleCollision();
 		}
@@ -322,6 +397,7 @@ public class Board extends JPanel implements Runnable, Commons {
 	public void playerHit() {
 		hit++;
 		playerCollision = true;
+		pressedBoost = false;
 		pressedAccelarator = false;
 		pressedBrake = false;
 		pressedLeft = false;
@@ -334,6 +410,7 @@ public class Board extends JPanel implements Runnable, Commons {
 		flashFlag = true;
 		playerRenewed = true;
 		playerCollision = false;
+		boostVal = 0;
 	}
 
 	@Override
@@ -343,6 +420,7 @@ public class Board extends JPanel implements Runnable, Commons {
 		beforeTime = System.currentTimeMillis();
 		beforeTimeForTraffic = beforeTime;
 		timeBeforeHit = beforeTime;
+		timeBeforeScore = beforeTime;
 		
 		while (ingame) {
 			repaint();
@@ -418,7 +496,7 @@ public class Board extends JPanel implements Runnable, Commons {
 			}
 			if (e.getKeyCode()==KeyEvent.VK_SPACE)
 			{
-				pressedBoost = true;
+				if (boostVal>500) pressedBoost = true;
 			}
 		}
 

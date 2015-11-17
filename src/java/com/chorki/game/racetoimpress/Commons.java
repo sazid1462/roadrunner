@@ -16,6 +16,6 @@ public interface Commons {
     public static final int DELAY_HIT = 3000;
     public static final int MAX_VX = 7;
     public static final int MAX_VY = 15;
-    public static final int MAX_BOOST_VY = 20;
+    public static final int MAX_BOOST_VY = 25;
 
 }

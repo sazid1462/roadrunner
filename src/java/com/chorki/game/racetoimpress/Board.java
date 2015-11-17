@@ -265,7 +265,9 @@ public class Board extends JPanel implements Runnable, Commons {
 		
 		timeDiffScore = System.currentTimeMillis() - timeBeforeScore;
 		if (vY>=10 && timeDiffScore>1000) {
-			score += vY;
+			if (player.getX()>BOARD_MIDDLE) score += vY*20;
+			if (pressedBoost) score += vY*10;
+			score += 10;
 			timeBeforeScore = System.currentTimeMillis();
 		}
 		

@@ -162,7 +162,7 @@ public class Board extends JPanel implements Runnable, Commons {
 		int rem = burn.size(); 
 		while (rem > 0) {
 			Burn brn = burn.poll();
-			if (pressedBoost || (pressedBoost && !pressedAccelarator)) g.drawImage(brn.getImage(), (int)player.getX()-10, (int)player.getY()+70,  this);
+			if (pressedBoost || (pressedBoost && !pressedAccelarator)) g.drawImage(brn.getImage(), (int)player.getX()-13, (int)player.getY()+100,  this);
 			burn.add(brn);
 			rem--;
 		}

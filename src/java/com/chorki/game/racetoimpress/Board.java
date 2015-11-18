@@ -36,7 +36,7 @@ public class Board extends JPanel implements Runnable, Commons {
 	
 	private Player player;
 	private int numTraffics = 5;
-	private int delayNewTraffic = 8000; // 30 sec
+	private int delayNewTraffic = 8000; // 8 sec
 
 	protected boolean pressedLeft = false;
 	protected boolean pressedRight = false;
@@ -48,7 +48,7 @@ public class Board extends JPanel implements Runnable, Commons {
 	private long timeBeforeHit, timeDiffHit;
 	
 	private float vY = 0;
-	private int boostVal = 0;
+	private float boostVal = 0;
 	
 	private int hit = 0;
 
@@ -88,8 +88,8 @@ public class Board extends JPanel implements Runnable, Commons {
 		burn = new LinkedList<Burn>();
 		
 		player = new Player();
-		smoke.add(new Smoke(player.x, player.y+player.height/2));
-		burn.add(new Burn(player.x, player.y+player.height/2));
+		smoke.add(new Smoke());
+		burn.add(new Burn());
 		
 		roads = new LinkedList<Roads>();
 		roads.add(new Roads(0, 0));
@@ -128,7 +128,7 @@ public class Board extends JPanel implements Runnable, Commons {
 		g.fillRect(80, 65, 100, metr.getHeight());
 		if (boostVal >= 500) g.setColor(Color.green);
 		else g.setColor(Color.red);
-		g.fillRect(80, 65, boostVal/10, metr.getHeight());
+		g.fillRect(80, 65, (int)boostVal/10, metr.getHeight());
 	}
 	
 	public void drawExplosion(Graphics g) {
@@ -150,7 +150,7 @@ public class Board extends JPanel implements Runnable, Commons {
 		int rem = smoke.size(); 
 		while (rem > 0) {
 			Smoke smk = smoke.poll();
-			if (pressedAccelarator && !pressedBoost) g.drawImage(smk.getImage(), (int)player.getX()-10, (int)player.getY()+70,  this);
+			if (pressedAccelarator && !pressedBoost) g.drawImage(smk.getImage(), (int)player.getX(), (int)player.getY()+100,  this);
 			smoke.add(smk);
 			rem--;
 		}
@@ -198,28 +198,28 @@ public class Board extends JPanel implements Runnable, Commons {
 		int rem = roads.size();
 		
 		if (pressedBoost) {
-			vY += .1;
+			vY += .1/SMOOTHINGFACTOR;
 			if (vY > MAX_BOOST_VY) {
 				vY = MAX_BOOST_VY;
 			}
-			boostVal -= 5;
+			boostVal -= 5/SMOOTHINGFACTOR;
 			if (boostVal <= 0) {
 				pressedBoost = false;
 				boostVal = 0;
 			}
 		} else {
 			if (pressedAccelarator) {
-				vY += .05;
+				vY += .05/SMOOTHINGFACTOR;
 				if (vY > MAX_VY) {
 					vY = MAX_VY;
 				}
 			} else if (pressedBrake) {
-				vY -= .1;
+				vY -= 1/SMOOTHINGFACTOR;
 				if (vY < 0) {
 					vY = 0;
 				}
 			} else {
-				vY -= .05;
+				vY -= .05/SMOOTHINGFACTOR;
 				if (vY < 0) {
 					vY = 0;
 				}
@@ -230,13 +230,14 @@ public class Board extends JPanel implements Runnable, Commons {
 			
 			if (road.isInside()) road.act(vY);
 			else {
-				road = new Roads(0, road.getY()-3840+MAX_VY);
+				road = new Roads(0, road.getY()-3840+vY/SMOOTHINGFACTOR);
 				road.act(vY);
 			}
 			g.drawImage(road.getImage(), Math.round(road.getX()), Math.round(road.getY()), this);
 			//						road.setVy(vY);
 			roads.add(road);
 			rem--;
+			
 		}
 //		int rem = roads.size(); 
 //		while (rem > 0) {
@@ -250,13 +251,13 @@ public class Board extends JPanel implements Runnable, Commons {
 	public void drawPlayer(Graphics g) {
 		// player
 		if (pressedLeft) {
-			player.setVx(player.getVx()-vY*.05f);
+			player.setVx(player.getVx()-vY*.05f/SMOOTHINGFACTOR);
 		}
 		else if (!pressedRight) {
 			player.setVx(0);
 		}
 		if (pressedRight) {
-			player.setVx(player.getVx()+vY*.05f);
+			player.setVx(player.getVx()+vY*.05f/SMOOTHINGFACTOR);
 		}
 		else if (!pressedLeft) {
 			player.setVx(0);
@@ -265,13 +266,13 @@ public class Board extends JPanel implements Runnable, Commons {
 		
 		timeDiffScore = System.currentTimeMillis() - timeBeforeScore;
 		if (vY>=10 && timeDiffScore>1000) {
-			if (player.getX()>BOARD_MIDDLE) score += vY*20;
-			if (pressedBoost) score += vY*10;
+			if (player.getX()>BOARD_MIDDLE) score += 50;
+			if (pressedBoost) score += 20;
 			score += 10;
 			timeBeforeScore = System.currentTimeMillis();
 		}
 		
-		if (boostVal<1000 && pressedAccelarator) boostVal ++;
+		if (boostVal<1000 && pressedAccelarator) boostVal += 1/SMOOTHINGFACTOR;
 		
 		sprites.add(player);
 		
@@ -318,7 +319,8 @@ public class Board extends JPanel implements Runnable, Commons {
 						}
 					}
 					if (rs1.intersects(rs2)) {
-		                sp2.slowDown(Math.min(sp2.getVy(), sp1.getVy()));
+						if (sp2.getVy()<0) sp2.slowDown(Math.max(sp2.getVy(), sp1.getVy()));
+						else sp2.slowDown(Math.min(sp2.getVy(), sp1.getVy()));
 					}
 				} else if (sp2.isPlayer) {
 					if (!playerRenewed && !playerCollision) {
@@ -335,7 +337,8 @@ public class Board extends JPanel implements Runnable, Commons {
 						}
 					}
 					if (rs1.intersects(rs2)) {
-		                sp1.slowDown(Math.min(sp2.getVy(), sp1.getVy()));
+						if (sp1.getVy()<0) sp1.slowDown(Math.max(sp2.getVy(), sp1.getVy()));
+						else sp1.slowDown(Math.min(sp2.getVy(), sp1.getVy()));
 					}
 				} else {
 					if (r1.intersects(r2)) {
@@ -347,8 +350,14 @@ public class Board extends JPanel implements Runnable, Commons {
 		                explosion.add(new Explosion(sp2.getX(), sp2.getY()));
 					}
 					if (rs1.intersects(rs2)) {
-		                sp1.slowDown(Math.min(sp2.getVy(), sp1.getVy()));
-		                sp2.slowDown(Math.min(sp2.getVy(), sp1.getVy()));
+						if (sp1.getVy()<0) {
+							sp1.slowDown(Math.max(sp2.getVy(), sp1.getVy()));
+			                sp2.slowDown(Math.max(sp2.getVy(), sp1.getVy()));
+						}
+						else {
+							sp1.slowDown(Math.min(sp2.getVy(), sp1.getVy()));
+			                sp2.slowDown(Math.min(sp2.getVy(), sp1.getVy()));
+						}
 					}
 	            }
 			}
@@ -440,7 +449,7 @@ public class Board extends JPanel implements Runnable, Commons {
 //			}
 			
 			timeDiff = System.currentTimeMillis() - beforeTime;
-            sleep = DELAY - timeDiff;
+            sleep = (int)DELAY - timeDiff;
 
             if (sleep > 0) { 
             	try {

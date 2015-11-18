@@ -18,12 +18,10 @@ public class Burn {
 	private boolean dying;
 	private int imgInd = 0, imgCount = 0;
 	
-	public Burn(float x, float y) {
+	public Burn() {
 		for (int i=0; i<burnImage.length; i++) {
 			burnImage[i] = new ImageIcon("./effects/burn"+(i+1)+".png");
 		}
-		this.setX(x);
-		this.setY(y);
 	}
 	
 	public void setDying(boolean dying) {
@@ -35,8 +33,8 @@ public class Burn {
 	}
 	
 	public Image getImage() {
-		if (imgInd == 19) imgInd = 0; 
-        return burnImage[((imgInd++)/5)%4].getImage();
+		if (imgInd == 79) imgInd = 0; 
+        return burnImage[((imgInd++)/20)%4].getImage();
     }
 	
 	public void act(float c) {

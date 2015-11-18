@@ -37,8 +37,8 @@ public class Player extends Sprite implements Commons{
     }
     
     public void act() {
-        x += vX;
-        y += vY;
+        x += vX/SMOOTHINGFACTOR;
+        y += vY/SMOOTHINGFACTOR;
         if (x <= 0) 
             x = (float) (0);
         if (x >= BOARD_WIDTH-width) 

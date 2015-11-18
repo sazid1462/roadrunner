@@ -34,11 +34,11 @@ public class Sprite implements Commons{
         }
         
         public Rectangle getSafeBounds() {
-            return new Rectangle((int)x-20, (int)y-20, width+20, height+20);
+            return new Rectangle((int)x, (int)y-20, width, height+20);
         }
         
         public boolean isInside() {
-            if (y > BORDER_BOTTOM+500) return false;
+            if (y > BORDER_BOTTOM) return false;
 //            if (y < BORDER_TOP-500) return false;
             return true;
         }
@@ -49,7 +49,7 @@ public class Sprite implements Commons{
         }
 
         public Image getImage() {
-            return image[((imgInd++)/5)%imgCount];
+            return image[((imgInd++)/20)%imgCount];
         }
 
         public void setX(float x) {

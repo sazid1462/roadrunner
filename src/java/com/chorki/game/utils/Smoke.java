@@ -12,18 +12,16 @@ import javax.swing.ImageIcon;
  *
  */
 public class Smoke {
-	private static ImageIcon smokeImage[] = new ImageIcon[4];
+	private static ImageIcon smokeImage[] = new ImageIcon[16];
 	private float x;
 	private float y;
 	private boolean dying;
 	private int imgInd = 0, imgCount = 0;
 	
-	public Smoke(float x, float y) {
+	public Smoke() {
 		for (int i=0; i<smokeImage.length; i++) {
 			smokeImage[i] = new ImageIcon("./effects/smoke"+(i+1)+".png");
 		}
-		this.setX(x);
-		this.setY(y);
 	}
 	
 	public void setDying(boolean dying) {
@@ -35,12 +33,12 @@ public class Smoke {
 	}
 	
 	public Image getImage() {
-		if (imgInd == 19) imgInd = 0; 
-        return smokeImage[((imgInd++)/5)%4].getImage();
+		if (imgInd == 319) imgInd = 0; 
+        return smokeImage[((imgInd++)/20)%16].getImage();
     }
 	
 	public void act(float c) {
-        this.setY(this.getY() + c);
+        this.setY(this.getY() + c-.5f);
     }
 
 	/**

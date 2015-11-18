@@ -83,8 +83,8 @@ public class Traffics extends Sprite {
     }
 
     public void act(float c) {
-        this.x += vX;
-        this.y += vY+c;
+        this.x += vX/SMOOTHINGFACTOR;
+        this.y += (vY+c)/SMOOTHINGFACTOR;
     }
     
 }

@@ -20,7 +20,7 @@ public class Roads extends Sprite {
 
     public void act(float c) {
         this.x += vX/SMOOTHINGFACTOR;
-        this.y = c;
+        this.y += vY/SMOOTHINGFACTOR;
     }
     
     public void collided(float c) {

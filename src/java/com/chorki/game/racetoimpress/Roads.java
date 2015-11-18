@@ -18,7 +18,7 @@ public class Roads extends Sprite {
         setHeight(Terrains.roads[0].getImage().getHeight(null));
     }
 
-    public void act(float c) {
+    public void act(float vY) {
         this.x += vX/SMOOTHINGFACTOR;
         this.y += vY/SMOOTHINGFACTOR;
     }

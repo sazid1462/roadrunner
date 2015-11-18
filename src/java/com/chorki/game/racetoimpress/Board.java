@@ -36,7 +36,7 @@ public class Board extends JPanel implements Runnable, Commons {
 	
 	private Player player;
 	private int numTraffics = 5;
-	private int delayNewTraffic = 8000; // 8 sec
+	private int delayNewTraffic = 5000; // 5 sec
 
 	protected boolean pressedLeft = false;
 	protected boolean pressedRight = false;
@@ -63,6 +63,7 @@ public class Board extends JPanel implements Runnable, Commons {
 	private long score = 0;
 	private long timeDiffScore = 0;
 	private long timeBeforeScore = 0;
+	private float roadPrevPos = 0;
 
 	public Board() 
 	{
@@ -93,8 +94,8 @@ public class Board extends JPanel implements Runnable, Commons {
 		
 		roads = new LinkedList<Roads>();
 		roads.add(new Roads(0, 0));
-		roads.add(new Roads(0, -1280));
-		roads.add(new Roads(0, -2560));
+		roads.add(new Roads(0, 0));
+//		roads.add(new Roads(0, 0));
 		
 //		for (int i=0; i<numTraffics; i++) {
 //			traffics.add(new Traffics());
@@ -195,8 +196,6 @@ public class Board extends JPanel implements Runnable, Commons {
 	public void drawRoads(Graphics g) 
 	{
 		// road
-		int rem = roads.size();
-		
 		if (pressedBoost) {
 			vY += .1/SMOOTHINGFACTOR;
 			if (vY > MAX_BOOST_VY) {
@@ -225,19 +224,26 @@ public class Board extends JPanel implements Runnable, Commons {
 				}
 			}
 		}
+		int rem = roads.size();
+		int i = 0;
 		while (rem > 0) {
 			Roads road = roads.poll();
 			
-			if (road.isInside()) road.act(vY);
-			else {
-				road = new Roads(0, road.getY()-3840+vY/SMOOTHINGFACTOR);
-				road.act(vY);
+			if (road.isInside()) {
+				roadPrevPos += vY/(2*SMOOTHINGFACTOR);
+				road.act(roadPrevPos-(i*1280));
 			}
-			g.drawImage(road.getImage(), Math.round(road.getX()), Math.round(road.getY()), this);
+			else {
+//				road = new Roads(0, 0);
+				roadPrevPos -= 1280 + vY/(2*SMOOTHINGFACTOR);
+				road.act(roadPrevPos-(i*1280));
+			}
+			g.drawImage(road.getImage(), Math.round(road.getX()), (int)roadPrevPos-(i*1280), this);
+//			roadPrevPos = Math.round(road.getY());
 			//						road.setVy(vY);
 			roads.add(road);
 			rem--;
-			
+			i++;
 		}
 //		int rem = roads.size(); 
 //		while (rem > 0) {
@@ -272,7 +278,7 @@ public class Board extends JPanel implements Runnable, Commons {
 			timeBeforeScore = System.currentTimeMillis();
 		}
 		
-		if (boostVal<1000 && pressedAccelarator) boostVal += 1/SMOOTHINGFACTOR;
+		if (boostVal<1000 && vY>5) boostVal += 1/SMOOTHINGFACTOR;
 		
 		sprites.add(player);
 		
@@ -308,55 +314,68 @@ public class Board extends JPanel implements Runnable, Commons {
 				if (sp1.isPlayer) {
 					if (!playerRenewed && !playerCollision) {
 						if (r1.intersects(r2)) {
-							roads.get(0).collided(sp2.getVy());
-							vY = 0;
-							sp2.collided(2*vY);
-							explosion.add(new Explosion(sp2.getX(), sp2.getY()));
-							explosion.add(new Explosion(sp1.getX(), sp1.getY()));
-							playerHit();
-//							renewPlayerCar();
-							timeBeforeHit = System.currentTimeMillis();
+							if (vY+sp2.getVy()>5) {
+								roads.get(0).collided(sp2.getVy());
+								vY = 0;
+								sp2.collided(2*vY);
+								explosion.add(new Explosion(sp2.getX(), sp2.getY()));
+								explosion.add(new Explosion(sp1.getX(), sp1.getY()));
+								playerHit();
+								//							renewPlayerCar();
+								timeBeforeHit = System.currentTimeMillis();
+							} else {
+								if (sp1.getY() > sp2.getY()) vY = 0;
+							}
 						}
 					}
 					if (rs1.intersects(rs2)) {
-						if (sp2.getVy()<0) sp2.slowDown(Math.max(sp2.getVy(), sp1.getVy()));
-						else sp2.slowDown(Math.min(sp2.getVy(), sp1.getVy()));
+						sp2.slowDown(0);
+						sp2.safeMode = true;
+					} else if (sp2.safeMode) {
+						if (sp2.getX()<BOARD_MIDDLE) sp2.setVy(-5);
+						else sp2.setVy(5);
+						sp2.safeMode = false;
 					}
 				} else if (sp2.isPlayer) {
 					if (!playerRenewed && !playerCollision) {
 						if (r1.intersects(r2)) {
-							sp1.collided(2*vY);
-							roads.get(0).collided(sp1.getVy());
-							vY = 0;
-							sp1.setDying(true);
-							explosion.add(new Explosion(sp1.getX(), sp1.getY()));
-							explosion.add(new Explosion(sp2.getX(), sp2.getY()));
-							playerHit();
-//							renewPlayerCar();
-							timeBeforeHit = System.currentTimeMillis();
+							if (vY+sp1.getVy()>5) {
+								sp1.collided(2*vY);
+								roads.get(0).collided(sp1.getVy());
+								vY = 0;
+								sp1.setDying(true);
+								explosion.add(new Explosion(sp1.getX(), sp1.getY()));
+								explosion.add(new Explosion(sp2.getX(), sp2.getY()));
+								playerHit();
+								//							renewPlayerCar();
+								timeBeforeHit = System.currentTimeMillis();
+							} else {
+								if (sp2.getY() > sp1.getY()) vY = 0;
+							}
 						}
 					}
 					if (rs1.intersects(rs2)) {
-						if (sp1.getVy()<0) sp1.slowDown(Math.max(sp2.getVy(), sp1.getVy()));
-						else sp1.slowDown(Math.min(sp2.getVy(), sp1.getVy()));
+						sp1.slowDown(0);
+						sp1.safeMode = true;
+					} else if (sp1.safeMode) {
+						if (sp1.getX()<BOARD_MIDDLE) sp1.setVy(-5);
+						else sp1.setVy(5);
+						sp1.safeMode = false;
 					}
 				} else {
 					if (r1.intersects(r2)) {
-		                sp1.collided(sp2.getVy());
-		                sp1.setDying(true);
-		                explosion.add(new Explosion(sp1.getX(), sp1.getY()));
-		                sp2.collided(sp1.getVy());
 		                sp2.setDying(true);
-		                explosion.add(new Explosion(sp2.getX(), sp2.getY()));
 					}
 					if (rs1.intersects(rs2)) {
 						if (sp1.getVy()<0) {
-							sp1.slowDown(Math.max(sp2.getVy(), sp1.getVy()));
-			                sp2.slowDown(Math.max(sp2.getVy(), sp1.getVy()));
+							float tmp = sp2.getVy();
+							sp2.slowDown(sp1.getVy());
+							sp1.slowDown(tmp);
 						}
 						else {
-							sp1.slowDown(Math.min(sp2.getVy(), sp1.getVy()));
-			                sp2.slowDown(Math.min(sp2.getVy(), sp1.getVy()));
+							float tmp = sp1.getVy();
+							sp1.slowDown(sp2.getVy());
+							sp2.slowDown(tmp);
 						}
 					}
 	            }

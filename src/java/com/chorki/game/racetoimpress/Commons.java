@@ -12,7 +12,7 @@ public interface Commons {
     public static final int BORDER_BOTTOM = 900;
     
     public static final int CAR_WIDTH = 60;
-    public static final float SMOOTHINGFACTOR = 7; 
+    public static final float SMOOTHINGFACTOR = 8; 
     public static final float DELAY = 16/SMOOTHINGFACTOR;
     public static final int DELAY_HIT = 3000;
     public static final int MAX_VX = 7;

@@ -35,8 +35,8 @@ public class Explosion {
 	}
 	
 	public Image getImage() {
-		if (imgInd == 34) setDying(true); 
-        return explodeImage[((imgInd++)/5)%7].getImage();
+		if (imgInd == 139) setDying(true); 
+        return explodeImage[((imgInd++)/20)%7].getImage();
     }
 	
 	public void act(float c) {

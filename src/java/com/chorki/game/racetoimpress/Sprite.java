@@ -18,7 +18,7 @@ public class Sprite implements Commons{
         protected boolean dying;
         public boolean isPlayer = false;
         protected int imgInd = 0, imgCount = 0;
-//        private long timeBef;
+        boolean safeMode = false;
 
         public void collided(float c) {
         	y -= vY+c;
@@ -34,7 +34,11 @@ public class Sprite implements Commons{
         }
         
         public Rectangle getSafeBounds() {
-            return new Rectangle((int)x, (int)y-20, width, height+20);
+        	if (x < BOARD_MIDDLE) {
+        		return new Rectangle((int)x, (int)y-20, width, height+5);
+        	} else {
+        		return new Rectangle((int)x, (int)y-5, width, height+20);
+        	}
         }
         
         public boolean isInside() {
@@ -49,7 +53,7 @@ public class Sprite implements Commons{
         }
 
         public Image getImage() {
-            return image[((imgInd++)/20)%imgCount];
+            return image[((imgInd++)/35)%imgCount];
         }
 
         public void setX(float x) {

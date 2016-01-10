@@ -117,19 +117,19 @@ public class Board extends JPanel implements Runnable, Commons {
 //		g.setColor(Color.white);
 //		g.drawRect(50, BOARD_WIDTH/2 - 30, BOARD_WIDTH-100, 50);
 
-		Font small = new Font("Helvetica", Font.BOLD, 14);
+		Font small = new Font("Helvetica", Font.BOLD, 8);
 		FontMetrics metr = this.getFontMetrics(small);
 
 		g.setColor(Color.white);
 		g.setFont(small);
-		g.drawString("Score: "+score , 40, 40);
-		g.drawString("Speed: "+(int)vY*10+" kmh" , 40, 60);
-		g.drawString("Nitro: ", 40, 80);
+		g.drawString("Score: "+score , 20, 20);
+		g.drawString("Speed: "+(int)vY*10+" kmh" , 20, 30);
+		g.drawString("Nitro: ", 20, 40);
 		g.setColor(Color.gray);
-		g.fillRect(80, 65, 100, metr.getHeight());
+		g.fillRect(50, 32, 50, metr.getHeight());
 		if (boostVal >= 500) g.setColor(Color.green);
 		else g.setColor(Color.red);
-		g.fillRect(80, 65, (int)boostVal/10, metr.getHeight());
+		g.fillRect(50, 32, (int)boostVal/20, metr.getHeight());
 	}
 	
 	public void drawExplosion(Graphics g) {
@@ -151,7 +151,7 @@ public class Board extends JPanel implements Runnable, Commons {
 		int rem = smoke.size(); 
 		while (rem > 0) {
 			Smoke smk = smoke.poll();
-			if (pressedAccelarator && !pressedBoost) g.drawImage(smk.getImage(), (int)player.getX(), (int)player.getY()+100,  this);
+			if (pressedAccelarator && !pressedBoost) g.drawImage(smk.getImage(), (int)player.getX()-10, (int)player.getY()+50,  this);
 			smoke.add(smk);
 			rem--;
 		}
@@ -162,7 +162,7 @@ public class Board extends JPanel implements Runnable, Commons {
 		int rem = burn.size(); 
 		while (rem > 0) {
 			Burn brn = burn.poll();
-			if (pressedBoost || (pressedBoost && !pressedAccelarator)) g.drawImage(brn.getImage(), (int)player.getX()-13, (int)player.getY()+100,  this);
+			if (pressedBoost || (pressedBoost && !pressedAccelarator)) g.drawImage(brn.getImage(), (int)player.getX()-8, (int)player.getY()+50,  this);
 			burn.add(brn);
 			rem--;
 		}
@@ -231,14 +231,14 @@ public class Board extends JPanel implements Runnable, Commons {
 			
 			if (road.isInside()) {
 				roadPrevPos += vY/(2*SMOOTHINGFACTOR);
-				road.act(roadPrevPos-(i*1280));
+				road.act(roadPrevPos-(i*463));
 			}
 			else {
 //				road = new Roads(0, 0);
-				roadPrevPos -= 1280 + vY/(2*SMOOTHINGFACTOR);
-				road.act(roadPrevPos-(i*1280));
+				roadPrevPos -= 463 + vY/(2*SMOOTHINGFACTOR);
+				road.act(roadPrevPos-(i*463));
 			}
-			g.drawImage(road.getImage(), Math.round(road.getX()), (int)roadPrevPos-(i*1280), this);
+			g.drawImage(road.getImage(), Math.round(road.getX()), (int)roadPrevPos-(i*463), this);
 //			roadPrevPos = Math.round(road.getY());
 			//						road.setVy(vY);
 			roads.add(road);
@@ -411,11 +411,11 @@ public class Board extends JPanel implements Runnable, Commons {
 		g.fillRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT);
 
 		g.setColor(new Color(0, 32, 48));
-		g.fillRect(50, BOARD_WIDTH/2 - 30, BOARD_WIDTH-100, 50);
+		g.fillRect(25, BOARD_WIDTH/2 - 15, BOARD_WIDTH-50, 25);
 		g.setColor(Color.white);
-		g.drawRect(50, BOARD_WIDTH/2 - 30, BOARD_WIDTH-100, 50);
+		g.drawRect(25, BOARD_WIDTH/2 - 15, BOARD_WIDTH-50, 25);
 
-		Font small = new Font("Helvetica", Font.BOLD, 14);
+		Font small = new Font("Helvetica", Font.BOLD, 8);
 		FontMetrics metr = this.getFontMetrics(small);
 
 		g.setColor(Color.white);

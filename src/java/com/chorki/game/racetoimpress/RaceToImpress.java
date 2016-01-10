@@ -3,7 +3,7 @@ package com.chorki.game.racetoimpress;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 
-import javax.swing.JFrame;
+import javax.swing.*;
 
 import com.chorki.game.utils.Cars;
 import com.chorki.game.utils.Terrains;
@@ -20,7 +20,7 @@ public class RaceToImpress extends JFrame implements Commons {
     	Terrains.loadRoads();
         add(new Board());
         setTitle("Race To Impress");
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setSize(BOARD_WIDTH, BOARD_HEIGHT);
         setLocationRelativeTo(null);
         setResizable(false);

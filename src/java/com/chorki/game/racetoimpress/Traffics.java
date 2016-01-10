@@ -7,11 +7,11 @@ import com.chorki.game.utils.Pair;
 public class Traffics extends Sprite {
 
     private final int posX[] = {
-    		BOARD_MIDDLE+10, BOARD_MIDDLE+15+CAR_WIDTH, BOARD_MIDDLE+30+2*CAR_WIDTH
+    		BOARD_MIDDLE+5, BOARD_MIDDLE+7+CAR_WIDTH, BOARD_MIDDLE+15+2*CAR_WIDTH
     };
     
     private final int posXRev[] = {
-    		BOARD_MIDDLE-10-CAR_WIDTH, BOARD_MIDDLE-15-2*CAR_WIDTH, BOARD_MIDDLE-30-3*CAR_WIDTH
+    		BOARD_MIDDLE-5-CAR_WIDTH, BOARD_MIDDLE-7-2*CAR_WIDTH, BOARD_MIDDLE-15-3*CAR_WIDTH
     };
     
     public Traffics(boolean rev) {
